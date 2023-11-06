@@ -28,7 +28,7 @@ MFRC522::MIFARE_Key key;
 /* Set the start block to which we want to write data */
 /* Be aware of Sector Trailer Blocks */
 int startBlock = 4;
-int endBlock = BLOCK_COUNT + (BLOCK_COUNT / 4) + 1;
+int endBlock = startBlock + BLOCK_COUNT + (BLOCK_COUNT / 4) + 1;
 
 /* Create another array to read data from all blocks */
 /* Legthn of buffer should be 2 Bytes more than the size of Block (16 Bytes) */
