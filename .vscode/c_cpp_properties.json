@@ -10,9 +10,6 @@
             "includePath": [
                 "E:/Projects/Embedded/platformio/music-player/include",
                 "E:/Projects/Embedded/platformio/music-player/src",
-                "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/RFID_MFRC522v2/src",
-                "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
-                "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                 "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/WiFiManager",
                 "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                 "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
@@ -20,6 +17,9 @@
                 "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/ESPmDNS/src",
                 "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/DNSServer/src",
                 "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
+                "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/Arduino_MFRC522v2/src",
+                "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
+                "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                 "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/ArduinoJson/src",
                 "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/PubSubClient/src",
                 "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/newlib/platform_include",
@@ -244,9 +244,6 @@
                 "path": [
                     "E:/Projects/Embedded/platformio/music-player/include",
                     "E:/Projects/Embedded/platformio/music-player/src",
-                    "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/RFID_MFRC522v2/src",
-                    "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
-                    "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                     "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/WiFiManager",
                     "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                     "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
@@ -254,6 +251,9 @@
                     "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/ESPmDNS/src",
                     "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/DNSServer/src",
                     "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
+                    "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/Arduino_MFRC522v2/src",
+                    "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
+                    "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                     "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/ArduinoJson/src",
                     "E:/Projects/Embedded/platformio/music-player/.pio/libdeps/esp32dev/PubSubClient/src",
                     "C:/Users/imamr/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/newlib/platform_include",
@@ -475,7 +475,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60111",
+                "PLATFORMIO=60112",
                 "ARDUINO_ESP32_DEV",
                 "HAVE_CONFIG_H",
                 "MBEDTLS_CONFIG_FILE=\"mbedtls/esp_config.h\"",
