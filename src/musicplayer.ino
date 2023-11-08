@@ -31,7 +31,6 @@ int startBlock = 4;
 int endBlock = startBlock + BLOCK_COUNT + (BLOCK_COUNT / 4) + 1;
 
 /* Create another array to read data from all blocks */
-/* Legthn of buffer should be 2 Bytes more than the size of Block (16 Bytes) */
 byte PICCDataBufferLen = BLOCK_COUNT * BLOCK_SIZE;
 byte readPICCData[BLOCK_COUNT * BLOCK_SIZE];
 
@@ -69,9 +68,6 @@ byte WriteValue[DATA_LENGTH];
 void setup_PCD()
 {
   mfrc522.PCD_Init(); // Init MFRC522 board.
-#ifdef DEBUG
-  MFRC522Debug::PCD_DumpVersionToSerial(mfrc522, Serial); // Show details of PCD - MFRC522 Card Reader details.
-#endif
   /* Prepare the ksy for authentication */
   /* All keys are set to FFFFFFFFFFFFh at chip delivery from the factory */
   for (byte i = 0; i < 6; i++)
@@ -115,6 +111,8 @@ void mqttconnect()
     {
       Serial.println("connected");
       /* subscribe topic with default QoS 0*/
+      // turn on power light if mqtt connected
+      digitalWrite(PWR_PIN, HIGH);
       delay(100);
       client.publish(mqttPlayTopic.c_str(), willMessageOnline);
 #ifdef WRITE_MODE
@@ -128,6 +126,8 @@ void mqttconnect()
       Serial.print(client.state());
       Serial.println("try again in 5 seconds");
       /* Wait 5 seconds before retrying */
+      // blink power light if mqtt disconnected
+      digitalWrite(PWR_PIN, LOW);
       delay(5000);
     }
   }
@@ -137,43 +137,26 @@ void callback(char *topic, byte *payload, unsigned int length)
 {
   payload[length] = '\0';
   String value = String((char *)payload);
-#ifdef DEBUG
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print(" , ");
-  Serial.print(value);
-  Serial.println("] ");
-#endif
 
 #ifdef WRITE_MODE
   if (mqttWriteModeTopic.equals(topic))
   {
-#ifdef DEBUG
-    Serial.println("setting write mode...");
-#endif
     if (value == "on")
     {
       WriteMode = true;
+      digitalWrite(WRT_PIN, HIGH);
     }
     else
     {
       WriteMode = false;
+      digitalWrite(WRT_PIN, LOW);
     }
-#ifdef DEBUG
-    Serial.println("success setting write mode...");
-#endif
   }
 
   if (mqttWriteValueTopic.equals(topic))
   {
-#ifdef DEBUG
-    Serial.println("setting write value...");
-#endif
     memset(WriteValue, 0, DATA_LENGTH);
     memcpy(WriteValue, value.c_str(), DATA_LENGTH);
-#ifdef DEBUG
-    Serial.println("success setting write value...");
-#endif
   }
 #endif
 }
@@ -183,6 +166,13 @@ void setup()
   Serial.begin(115200); // Initialize serial communications with the PC for debugging.
   while (!Serial)
     ; // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4).
+
+  pinMode(PWR_PIN, OUTPUT);
+  pinMode(WRT_PIN, OUTPUT);
+  pinMode(BZR_PIN, OUTPUT);
+
+  // turn on power light
+  digitalWrite(PWR_PIN, HIGH);
 
   setup_PCD();
   setup_wifi();
@@ -201,60 +191,27 @@ void loop()
     return;
   }
 
-#ifdef DEBUG
-  Serial.print("\n");
-  Serial.println("**Card Detected**");
-  /* Print UID of the Card */
-  Serial.print(F("Card UID:"));
-  for (byte i = 0; i < mfrc522.uid.size; i++)
-  {
-    Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    Serial.print(mfrc522.uid.uidByte[i], HEX);
-  }
-  Serial.print("\n");
-#endif
 #ifdef WRITE_MODE
   if (WriteMode)
   {
+    digitalWrite(WRT_PIN, LOW);
+    tone(BZR_PIN, BZR_TONE);
     /* Call 'WriteDataToBlock' function, which will write data to the block */
-#ifdef DEBUG
-    Serial.print("\n");
-    Serial.println("Writing to Data Block...");
-#endif
     WriteDataToBlock(WriteValue);
-#ifdef DEBUG
-    Serial.println("Finished writing");
-#endif
+    digitalWrite(WRT_PIN, HIGH);
+    noTone(BZR_PIN);
   }
   else
   {
+#endif
+
+    digitalWrite(WRT_PIN, HIGH);
+    tone(BZR_PIN, BZR_TONE);
     /* Read data from the same block */
-#ifdef DEBUG
-    Serial.print("\n");
-    Serial.println("Reading from Data Block...");
-#endif
-    memset(readPICCData, 0, PICCDataBufferLen);
-    ReadDataFromBlock(readPICCData);
+    ReadAndPublishFromTag();
+    digitalWrite(WRT_PIN, LOW);
+    noTone(BZR_PIN);
 
-#ifdef DEBUG
-    /* Print the data read from block */
-    for (int j = 0; j < PICCDataBufferLen; j++)
-    {
-      Serial.write(readPICCData[j]);
-    }
-    Serial.print("\n");
-    Serial.println("Finished reading");
-#endif
-#endif
-    char str[(PICCDataBufferLen) + 1];
-    memcpy(str, readPICCData, PICCDataBufferLen);
-    str[PICCDataBufferLen] = 0;
-
-#ifdef DEBUG
-    Serial.println("publishing play message...");
-    Serial.println(str);
-#endif
-    client.publish(mqttPlayTopic.c_str(), str);
 #ifdef WRITE_MODE
   }
 #endif
@@ -277,7 +234,6 @@ void WriteDataToBlock(byte PICCData[])
       continue;
     }
     status = mfrc522.PCD_Authenticate(MFRC522Constants::PICC_CMD_MF_AUTH_KEY_A, blockNum, &key, &(mfrc522.uid));
-#ifdef DEBUG
     if (status != MFRC522Constants::STATUS_OK)
     {
       Serial.print("Authentication failed for Write: ");
@@ -288,7 +244,6 @@ void WriteDataToBlock(byte PICCData[])
     {
       Serial.println("Authentication success");
     }
-#endif
 
     memset(writeBuffer, 0, BLOCK_SIZE);
     for (int j = 0; j < BLOCK_SIZE; j++)
@@ -299,7 +254,6 @@ void WriteDataToBlock(byte PICCData[])
 
     /* Write data to the block */
     status = mfrc522.MIFARE_Write(blockNum, writeBuffer, BLOCK_SIZE);
-#ifdef DEBUG
     if (status != MFRC522Constants::STATUS_OK)
     {
       Serial.print("Writing to Block failed: ");
@@ -310,10 +264,21 @@ void WriteDataToBlock(byte PICCData[])
     {
       Serial.println("Data was written into Block successfully");
     }
-#endif
   }
 }
 #endif
+
+void ReadAndPublishFromTag()
+{
+  memset(readPICCData, 0, PICCDataBufferLen);
+  ReadDataFromBlock(readPICCData);
+
+  char str[(PICCDataBufferLen) + 1];
+  memcpy(str, readPICCData, PICCDataBufferLen);
+  str[PICCDataBufferLen] = 0;
+
+  client.publish(mqttPlayTopic.c_str(), str);
+}
 
 void ReadDataFromBlock(byte PICCData[])
 {
@@ -328,7 +293,6 @@ void ReadDataFromBlock(byte PICCData[])
     }
     /* Authenticating the desired data block for Read access using Key A */
     status = mfrc522.PCD_Authenticate(MFRC522Constants::PICC_CMD_MF_AUTH_KEY_A, blockNum, &key, &(mfrc522.uid));
-#ifdef DEBUG
     if (status != MFRC522Constants::STATUS_OK)
     {
       Serial.print("Authentication failed for Read: ");
@@ -339,11 +303,9 @@ void ReadDataFromBlock(byte PICCData[])
     {
       Serial.println("Authentication success");
     }
-#endif
 
     /* Reading data from the Block */
     status = mfrc522.MIFARE_Read(blockNum, readBuffer, &bufferLen);
-#ifdef DEBUG
     if (status != MFRC522Constants::STATUS_OK)
     {
       Serial.print("Reading failed: ");
@@ -354,11 +316,28 @@ void ReadDataFromBlock(byte PICCData[])
     {
       Serial.println("Block was read successfully");
     }
-#endif
     for (int j = 0; j < BLOCK_SIZE; j++)
     {
       PICCData[piccDataIndex] = readBuffer[j];
       piccDataIndex++;
     }
   }
+}
+
+void BlinkLEDFromHigh(uint8_t pin, uint8_t final)
+{
+  digitalWrite(pin, LOW);
+  delay(100);
+  digitalWrite(pin, HIGH);
+  delay(100);
+  digitalWrite(pin, final);
+}
+
+void BlinkLEDFromLow(uint8_t pin, uint8_t final)
+{
+  digitalWrite(pin, HIGH);
+  delay(100);
+  digitalWrite(pin, LOW);
+  delay(100);
+  digitalWrite(pin, final);
 }
